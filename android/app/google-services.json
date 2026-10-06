@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "175500440586",
+    "project_id": "jomiobusineogbook",
+    "storage_bucket": "jomiobusineogbook.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:175500440586:android:3852d46b5fb5ad79ff5bf3",
+        "android_client_info": {
+          "package_name": "com.jomio.business_logbook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgpYAouQwOQqN0YSPeRmFz3hCRefSg8co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
