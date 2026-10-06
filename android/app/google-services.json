@@ -7,6 +7,25 @@
   "client": [
     {
       "client_info": {
+        "mobilesdk_app_id": "1:175500440586:android:ce8d8a2753569a20ff5bf3",
+        "android_client_info": {
+          "package_name": "com.example.jomio_business_logbook"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAgpYAouQwOQqN0YSPeRmFz3hCRefSg8co"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
         "mobilesdk_app_id": "1:175500440586:android:3852d46b5fb5ad79ff5bf3",
         "android_client_info": {
           "package_name": "com.jomio.business_logbook"

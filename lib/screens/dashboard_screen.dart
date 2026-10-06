@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/app_provider.dart';
+import 'add_customer_screen.dart';
+import 'customer_details_screen.dart';
 
 class DashboardScreen extends StatelessWidget {
   const DashboardScreen({super.key});
@@ -44,7 +46,7 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            "৳ \${customer.balance.abs()}",
+                            "৳ ${customer.balance.abs()}",
                             style: TextStyle(
                               color: customer.balance > 0 ? const Color(0xFF4CAF50) : (customer.balance < 0 ? const Color(0xFFE53935) : Colors.grey),
                               fontWeight: FontWeight.bold,
@@ -58,7 +60,9 @@ class DashboardScreen extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        // Navigate to Customer details
+                        Navigator.push(context, MaterialPageRoute(
+                          builder: (context) => CustomerDetailsScreen(customer: customer),
+                        ));
                       },
                     );
                   },
@@ -69,7 +73,9 @@ class DashboardScreen extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {},
+        onPressed: () {
+          Navigator.push(context, MaterialPageRoute(builder: (context) => const AddCustomerScreen()));
+        },
         icon: const Icon(Icons.person_add),
         label: const Text("Add Customer"),
         backgroundColor: Theme.of(context).colorScheme.primary,
@@ -90,9 +96,9 @@ class DashboardScreen extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildSummaryItem("You will give", "৳ \${provider.totalGive}", const Color(0xFFE53935)),
+              Expanded(child: _buildSummaryItem("You will give", "৳ ${provider.totalGive}", const Color(0xFFE53935))),
               Container(width: 1, height: 40, color: Colors.grey.shade300),
-              _buildSummaryItem("You will get", "৳ \${provider.totalGet}", const Color(0xFF4CAF50)),
+              Expanded(child: _buildSummaryItem("You will get", "৳ ${provider.totalGet}", const Color(0xFF4CAF50))),
             ],
           ),
         ),
@@ -103,9 +109,9 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildSummaryItem(String title, String amount, Color amountColor) {
     return Column(
       children: [
-        Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 14)),
+        Text(title, style: TextStyle(color: Colors.grey.shade600, fontSize: 14), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
         const SizedBox(height: 8),
-        Text(amount, style: TextStyle(color: amountColor, fontSize: 20, fontWeight: FontWeight.bold)),
+        Text(amount, style: TextStyle(color: amountColor, fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center, overflow: TextOverflow.ellipsis),
       ],
     );
   }

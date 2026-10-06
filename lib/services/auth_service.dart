@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+
 abstract class IAuthService {
   Future<String?> login(String email, String password);
   Future<String?> register(String email, String password);
@@ -6,24 +8,25 @@ abstract class IAuthService {
 }
 
 class FirebaseAuthService implements IAuthService {
-  // TODO: Inject real FirebaseAuth instance
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
   @override
   Future<String?> login(String email, String password) async {
-    // Mock login
-    return 'mock_user_123';
+    final cred = await _auth.signInWithEmailAndPassword(email: email, password: password);
+    return cred.user?.uid;
   }
 
   @override
   Future<String?> register(String email, String password) async {
-    // Mock register
-    return 'mock_user_123';
+    final cred = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+    return cred.user?.uid;
   }
 
   @override
   Future<void> logout() async {
-    // Mock logout
+    await _auth.signOut();
   }
 
   @override
-  Stream<String?> get authStateChanges => Stream.value('mock_user_123'); // Always authenticated for mockup
+  Stream<String?> get authStateChanges => _auth.authStateChanges().map((user) => user?.uid);
 }
