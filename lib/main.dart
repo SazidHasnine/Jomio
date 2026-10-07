@@ -10,6 +10,7 @@ import 'services/auth_service.dart';
 import 'services/database_service.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/auth_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -49,14 +50,7 @@ class JomioApp extends StatelessWidget {
         fontFamily: GoogleFonts.inter().fontFamily,
         useMaterial3: true,
       ),
-      home: Consumer<AppProvider>(
-        builder: (context, provider, child) {
-          if (provider.currentUserId == null) {
-            return const AuthScreen();
-          }
-          return const DashboardScreen();
-        },
-      ),
+      home: const SplashScreen(),
     );
   }
 }

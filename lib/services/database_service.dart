@@ -69,7 +69,7 @@ class FirestoreDatabaseService implements IDatabaseService {
       // Create transaction
       await _db.collection('transactions').add(transaction.toMap());
       
-      // Update customer balance
+      // Update customer balance and last transaction date
       final customerRef = _db
           .collection('users')
           .doc(userId)
@@ -77,12 +77,12 @@ class FirestoreDatabaseService implements IDatabaseService {
           .doc(transaction.customerId);
           
       // Determine balance change. 
-      // If it's credit (we got money), balance goes down (due is reduced or advance increases).
-      // Assuming: positive = advance (they paid us extra), negative = due (they owe us)
-      final amountChange = transaction.isCredit ? transaction.amount : -transaction.amount;
+      // got = increase balance (advance/reduce due), gave = decrease balance (increase due)
+      final amountChange = transaction.amountGot - transaction.amountGave;
       
       await customerRef.update({
-        'balance': FieldValue.increment(amountChange)
+        'balance': FieldValue.increment(amountChange),
+        'lastTransactionDate': transaction.date.toIso8601String(),
       });
     } catch (e) {
       print("Error adding transaction: \$e");

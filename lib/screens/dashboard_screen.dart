@@ -11,7 +11,7 @@ class DashboardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Jomio', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+        title: Image.asset('assets/jomio-custom-lettering.png', height: 28),
         backgroundColor: Theme.of(context).colorScheme.primary,
         elevation: 0,
         actions: [
@@ -39,8 +39,29 @@ class DashboardScreen extends StatelessWidget {
                         backgroundColor: Colors.grey.shade200,
                         child: Text(customer.name[0], style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.black54)),
                       ),
-                      title: Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: const Text("Tap to view details", style: TextStyle(fontSize: 12)),
+                      title: Row(
+                        children: [
+                          Text(customer.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.shade50,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              customer.userType.name.toUpperCase(),
+                              style: TextStyle(fontSize: 10, color: Colors.blue.shade700, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                      subtitle: Text(
+                        customer.lastTransactionDate != null
+                            ? "Last tx: \${DateTime.now().difference(customer.lastTransactionDate!).inDays} days ago"
+                            : "Tap to view details",
+                        style: const TextStyle(fontSize: 12),
+                      ),
                       trailing: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         crossAxisAlignment: CrossAxisAlignment.end,

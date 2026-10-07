@@ -32,12 +32,12 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     });
   }
 
-  void _addTransaction(bool isCredit) {
+  void _addTransaction(bool isGot) {
     final ctrl = TextEditingController();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(isCredit ? 'You Got (Received)' : 'You Gave (Credit)'),
+        title: Text(isGot ? 'You Got (Received)' : 'You Gave (Paid)'),
         content: TextField(
           controller: ctrl,
           keyboardType: TextInputType.number,
@@ -55,8 +55,8 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               final tx = AppTransaction(
                 id: '', 
                 customerId: widget.customer.id, 
-                amount: amount, 
-                isCredit: isCredit, 
+                amountGot: isGot ? amount : 0, 
+                amountGave: isGot ? 0 : amount, 
                 date: DateTime.now()
               );
               
@@ -90,16 +90,16 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
               final tx = transactions[index];
               return ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: tx.isCredit ? Colors.green.shade100 : Colors.red.shade100,
-                  child: Icon(tx.isCredit ? Icons.arrow_downward : Icons.arrow_upward, 
-                      color: tx.isCredit ? Colors.green : Colors.red),
+                  backgroundColor: tx.amountGot > 0 ? Colors.green.shade100 : Colors.red.shade100,
+                  child: Icon(tx.amountGot > 0 ? Icons.arrow_downward : Icons.arrow_upward, 
+                      color: tx.amountGot > 0 ? Colors.green : Colors.red),
                 ),
-                title: Text(tx.isCredit ? 'Got' : 'Gave', style: const TextStyle(fontWeight: FontWeight.bold)),
+                title: Text(tx.amountGot > 0 ? 'Got' : 'Gave', style: const TextStyle(fontWeight: FontWeight.bold)),
                 subtitle: Text("\${tx.date.day}/\${tx.date.month}/\${tx.date.year}"),
                 trailing: Text(
-                  "৳ \${tx.amount}", 
+                  "৳ \${tx.amountGot > 0 ? tx.amountGot : tx.amountGave}", 
                   style: TextStyle(
-                    color: tx.isCredit ? Colors.green : Colors.red,
+                    color: tx.amountGot > 0 ? Colors.green : Colors.red,
                     fontSize: 18,
                     fontWeight: FontWeight.bold
                   ),

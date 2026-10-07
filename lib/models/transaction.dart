@@ -1,16 +1,16 @@
 class AppTransaction {
   final String id;
   final String customerId;
-  final double amount;
-  final bool isCredit; // true = got money, false = gave money
+  final double amountGot;
+  final double amountGave;
   final DateTime date;
   final String note;
 
   AppTransaction({
     required this.id,
     required this.customerId,
-    required this.amount,
-    required this.isCredit,
+    this.amountGot = 0.0,
+    this.amountGave = 0.0,
     required this.date,
     this.note = '',
   });
@@ -19,8 +19,8 @@ class AppTransaction {
     return AppTransaction(
       id: documentId,
       customerId: data['customerId'] ?? '',
-      amount: (data['amount'] ?? 0).toDouble(),
-      isCredit: data['isCredit'] ?? true,
+      amountGot: (data['amountGot'] ?? 0).toDouble(),
+      amountGave: (data['amountGave'] ?? 0).toDouble(),
       date: data['date'] != null ? DateTime.parse(data['date']) : DateTime.now(),
       note: data['note'] ?? '',
     );
@@ -29,8 +29,8 @@ class AppTransaction {
   Map<String, dynamic> toMap() {
     return {
       'customerId': customerId,
-      'amount': amount,
-      'isCredit': isCredit,
+      'amountGot': amountGot,
+      'amountGave': amountGave,
       'date': date.toIso8601String(),
       'note': note,
     };

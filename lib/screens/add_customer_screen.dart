@@ -14,6 +14,7 @@ class AddCustomerScreen extends StatefulWidget {
 class _AddCustomerScreenState extends State<AddCustomerScreen> {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
+  UserType _userType = UserType.customer;
   bool isLoading = false;
 
   void _saveCustomer() async {
@@ -27,6 +28,7 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
       name: _nameCtrl.text.trim(),
       phone: _phoneCtrl.text.trim(),
       balance: 0,
+      userType: _userType,
     );
 
     final db = FirestoreDatabaseService();
@@ -65,6 +67,21 @@ class _AddCustomerScreenState extends State<AddCustomerScreen> {
                 labelText: 'Phone Number',
                 border: OutlineInputBorder(),
               ),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<UserType>(
+              value: _userType,
+              decoration: const InputDecoration(
+                labelText: 'Type',
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(value: UserType.customer, child: Text('Customer')),
+                DropdownMenuItem(value: UserType.supplier, child: Text('Supplier')),
+              ],
+              onChanged: (val) {
+                if (val != null) setState(() => _userType = val);
+              },
             ),
             const SizedBox(height: 32),
             SizedBox(
