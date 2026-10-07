@@ -43,4 +43,11 @@ class AppProvider with ChangeNotifier {
   double get totalGet {
     return customers.where((c) => c.balance > 0).fold(0, (sum, c) => sum + c.balance);
   }
+
+  Future<void> logout() async {
+    await _auth.logout();
+    customers.clear();
+    currentUserId = null;
+    notifyListeners();
+  }
 }

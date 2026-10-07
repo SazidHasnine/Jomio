@@ -4,6 +4,7 @@ import '../models/customer.dart';
 import '../models/transaction.dart';
 import '../services/database_service.dart';
 import '../providers/app_provider.dart';
+import 'transaction_entry_screen.dart';
 
 class CustomerDetailsScreen extends StatefulWidget {
   final Customer customer;
@@ -32,46 +33,20 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
     });
   }
 
-  void _addTransaction(bool isGot) {
-    final ctrl = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(isGot ? 'You Got (Received)' : 'You Gave (Paid)'),
-        content: TextField(
-          controller: ctrl,
-          keyboardType: TextInputType.number,
-          decoration: const InputDecoration(labelText: 'Amount (৳)', border: OutlineInputBorder()),
+  void _addTransaction(bool isGot) async {
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TransactionEntryScreen(
+          customer: widget.customer,
+          isGot: isGot,
         ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('CANCEL')),
-          ElevatedButton(
-            onPressed: () async {
-              if (ctrl.text.isEmpty) return;
-              final amount = double.tryParse(ctrl.text) ?? 0;
-              if (amount <= 0) return;
-
-              final provider = context.read<AppProvider>();
-              final tx = AppTransaction(
-                id: '', 
-                customerId: widget.customer.id, 
-                amountGot: isGot ? amount : 0, 
-                amountGave: isGot ? 0 : amount, 
-                date: DateTime.now()
-              );
-              
-              Navigator.pop(context);
-              setState(() => isLoading = true);
-              
-              await _db.addTransaction(provider.currentUserId!, tx);
-              await provider.loadCustomers(); // Update balances on home
-              await _loadTransactions();
-            },
-            child: const Text('SAVE'),
-          )
-        ],
       ),
     );
+    if (result == true) {
+      setState(() => isLoading = true);
+      await _loadTransactions();
+    }
   }
 
   @override
@@ -95,9 +70,9 @@ class _CustomerDetailsScreenState extends State<CustomerDetailsScreen> {
                       color: tx.amountGot > 0 ? Colors.green : Colors.red),
                 ),
                 title: Text(tx.amountGot > 0 ? 'Got' : 'Gave', style: const TextStyle(fontWeight: FontWeight.bold)),
-                subtitle: Text("\${tx.date.day}/\${tx.date.month}/\${tx.date.year}"),
+                subtitle: Text("${tx.date.day}/${tx.date.month}/${tx.date.year}"),
                 trailing: Text(
-                  "৳ \${tx.amountGot > 0 ? tx.amountGot : tx.amountGave}", 
+                  "৳ ${tx.amountGot > 0 ? tx.amountGot : tx.amountGave}", 
                   style: TextStyle(
                     color: tx.amountGot > 0 ? Colors.green : Colors.red,
                     fontSize: 18,

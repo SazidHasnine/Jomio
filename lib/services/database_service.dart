@@ -51,12 +51,14 @@ class FirestoreDatabaseService implements IDatabaseService {
       final snapshot = await _db
           .collection('transactions')
           .where('customerId', isEqualTo: customerId)
-          .orderBy('date', descending: true)
           .get();
 
-      return snapshot.docs
+      final list = snapshot.docs
           .map((doc) => AppTransaction.fromMap(doc.data(), doc.id))
           .toList();
+      
+      list.sort((a, b) => b.date.compareTo(a.date));
+      return list;
     } catch (e) {
       print("Error fetching transactions: \$e");
       return [];

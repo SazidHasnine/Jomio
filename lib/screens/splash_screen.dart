@@ -13,6 +13,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  bool _showSplash = true;
+
   @override
   void initState() {
     super.initState();
@@ -21,33 +23,38 @@ class _SplashScreenState extends State<SplashScreen> {
 
   void _navigateToNext() async {
     await Future.delayed(const Duration(seconds: 2));
-    if (!mounted) return;
-    
-    final provider = context.read<AppProvider>();
-    
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(
-        builder: (context) => provider.currentUserId == null
-            ? const AuthScreen()
-            : const DashboardScreen(),
-      ),
-    );
+    if (mounted) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Shimmer.fromColors(
-          baseColor: Theme.of(context).colorScheme.primary,
-          highlightColor: Colors.red.shade200,
-          child: Image.asset(
-            'assets/jomio-custom-lettering.png',
-            width: 250,
+    if (_showSplash) {
+      return Scaffold(
+        backgroundColor: Colors.white,
+        body: Center(
+          child: Shimmer.fromColors(
+            baseColor: Theme.of(context).colorScheme.primary,
+            highlightColor: Colors.red.shade200,
+            child: Image.asset(
+              'assets/jomio-custom-lettering.png',
+              width: 250,
+            ),
           ),
         ),
-      ),
+      );
+    }
+
+    return Consumer<AppProvider>(
+      builder: (context, provider, child) {
+        if (provider.currentUserId == null) {
+          return const AuthScreen();
+        }
+        return const DashboardScreen();
+      },
     );
   }
 }
