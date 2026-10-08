@@ -5,6 +5,7 @@ class AppTransaction {
   final double amountGave;
   final DateTime date;
   final String note;
+  final String? photoUrl;
 
   AppTransaction({
     required this.id,
@@ -13,6 +14,7 @@ class AppTransaction {
     this.amountGave = 0.0,
     required this.date,
     this.note = '',
+    this.photoUrl,
   });
 
   factory AppTransaction.fromMap(Map<String, dynamic> data, String documentId) {
@@ -23,6 +25,7 @@ class AppTransaction {
       amountGave: (data['amountGave'] ?? 0).toDouble(),
       date: data['date'] != null ? DateTime.parse(data['date']) : DateTime.now(),
       note: data['note'] ?? '',
+      photoUrl: data['photoUrl'],
     );
   }
 
@@ -33,6 +36,7 @@ class AppTransaction {
       'amountGave': amountGave,
       'date': date.toIso8601String(),
       'note': note,
+      if (photoUrl != null) 'photoUrl': photoUrl,
     };
   }
 }

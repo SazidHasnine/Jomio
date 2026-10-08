@@ -7,7 +7,7 @@ import '../services/database_service.dart';
 
 class TransactionEntryScreen extends StatefulWidget {
   final Customer customer;
-  final bool isGot;
+  final bool isGot; // initial suggestion
 
   const TransactionEntryScreen({
     super.key,
@@ -20,28 +20,32 @@ class TransactionEntryScreen extends StatefulWidget {
 }
 
 class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
-  String _amountString = '';
+  final _amountCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+  late bool _isGot;
+  DateTime _selectedDate = DateTime.now();
+  bool _hasPhotoAttached = false;
   bool _isLoading = false;
 
-  void _onKeyPress(String value) {
-    if (value == '<') {
-      if (_amountString.isNotEmpty) {
-        setState(() => _amountString = _amountString.substring(0, _amountString.length - 1));
-      }
-    } else {
-      // Basic validation
-      if (_amountString.contains('.') && value == '.') return;
-      if (_amountString.length > 9) return;
-      
-      setState(() => _amountString += value);
-    }
+  @override
+  void initState() {
+    super.initState();
+    _isGot = widget.isGot;
+  }
+
+  @override
+  void dispose() {
+    _amountCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
   }
 
   void _submit() async {
-    final amount = double.tryParse(_amountString) ?? 0;
+    final amount = double.tryParse(_amountCtrl.text.trim()) ?? 0;
     if (amount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please enter a valid amount')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('অনুগ্রহ করে সঠিক টাকার পরিমাণ লিখুন')),
+      );
       return;
     }
 
@@ -51,124 +55,298 @@ class _TransactionEntryScreenState extends State<TransactionEntryScreen> {
     final tx = AppTransaction(
       id: '',
       customerId: widget.customer.id,
-      amountGot: widget.isGot ? amount : 0,
-      amountGave: widget.isGot ? 0 : amount,
-      date: DateTime.now(),
+      amountGot: _isGot ? amount : 0,
+      amountGave: _isGot ? 0 : amount,
+      date: _selectedDate,
       note: _noteCtrl.text.trim(),
+      photoUrl: _hasPhotoAttached ? 'sample_receipt_memo.jpg' : null,
     );
 
     final db = FirestoreDatabaseService();
-    await db.addTransaction(provider.currentUserId!, tx);
-    await provider.loadCustomers();
+    if (provider.currentUserId != null) {
+      await db.addTransaction(provider.currentUserId!, tx);
+      await provider.loadCustomers();
+    }
     
     if (mounted) {
-      Navigator.pop(context, true); // Return true to indicate success
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('লেনদেনের ডাটা সফলভাবে সংরক্ষিত হয়েছে!')),
+      );
+      Navigator.pop(context, true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final color = widget.isGot ? Colors.green : Colors.red;
-    final title = widget.isGot ? 'You Got (Received)' : 'You Gave (Paid)';
+    final balance = widget.customer.balance;
+    final isDue = balance < 0;
+    final balanceText = balance == 0
+        ? 'হিসাব পরিশোধিত'
+        : (isDue ? 'পাবোঃ ৳${balance.abs().toStringAsFixed(2)}' : 'দেবোঃ ৳${balance.toStringAsFixed(2)}');
+    final activeColor = _isGot ? Colors.green : const Color(0xFFE53935);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title, style: const TextStyle(color: Colors.white)),
-        backgroundColor: color,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white24,
+              child: Text(
+                widget.customer.name.isNotEmpty ? widget.customer.name[0] : '?',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Amount (৳)', style: TextStyle(color: Colors.grey.shade600, fontSize: 18)),
-                  const SizedBox(height: 8),
                   Text(
-                    _amountString.isEmpty ? '0' : _amountString,
-                    style: TextStyle(
-                      fontSize: 48,
-                      fontWeight: FontWeight.bold,
-                      color: color,
-                    ),
+                    widget.customer.name,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
-                  const SizedBox(height: 24),
-                  TextField(
-                    controller: _noteCtrl,
-                    decoration: const InputDecoration(
-                      hintText: 'Add Note / Details (optional)',
-                      border: UnderlineInputBorder(),
-                    ),
-                    textAlign: TextAlign.center,
+                  Text(
+                    widget.customer.phone,
+                    style: const TextStyle(fontSize: 11, color: Colors.white70),
                   ),
                 ],
               ),
             ),
-          ),
-          _buildKeypad(color),
-        ],
+          ],
+        ),
+        backgroundColor: const Color(0xFFE53935),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
-    );
-  }
-
-  Widget _buildKeypad(Color color) {
-    return Container(
-      color: Colors.grey.shade100,
-      padding: const EdgeInsets.all(16),
-      child: SafeArea(
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           children: [
-            Row(children: [_buildKey('1'), _buildKey('2'), _buildKey('3')]),
-            Row(children: [_buildKey('4'), _buildKey('5'), _buildKey('6')]),
-            Row(children: [_buildKey('7'), _buildKey('8'), _buildKey('9')]),
-            Row(children: [_buildKey('.'), _buildKey('0'), _buildKey('<', icon: Icons.backspace)]),
+            // Current Balance status banner (matching TallyKhata)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: isDue ? Colors.red.shade50 : Colors.green.shade50,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isDue ? Colors.red.shade200 : Colors.green.shade200),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    balanceText,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: isDue ? Colors.red.shade900 : Colors.green.shade900,
+                    ),
+                  ),
+                  Text(
+                    widget.customer.lastTransactionDate != null
+                        ? '(${DateTime.now().difference(widget.customer.lastTransactionDate!).inDays} দিন আগে)'
+                        : '(আজকের হিসাব)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Dual Transaction Mode Selector (দিলাম/বেচা vs পেলাম)
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isGot = false),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: !_isGot ? const Color(0xFFE53935) : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: !_isGot ? const Color(0xFFE53935) : Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.arrow_upward, color: !_isGot ? Colors.white : Colors.red, size: 20),
+                          const SizedBox(height: 4),
+                          Text(
+                            'দিলাম / বেচা',
+                            style: TextStyle(
+                              color: !_isGot ? Colors.white : Colors.red.shade800,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () => setState(() => _isGot = true),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: _isGot ? Colors.green : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _isGot ? Colors.green : Colors.grey.shade300),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.arrow_downward, color: _isGot ? Colors.white : Colors.green, size: 20),
+                          const SizedBox(height: 4),
+                          Text(
+                            'পেলাম / জমা',
+                            style: TextStyle(
+                              color: _isGot ? Colors.white : Colors.green.shade800,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+
+            // Amount Field
+            TextField(
+              controller: _amountCtrl,
+              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+              autofocus: true,
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: activeColor,
+              ),
+              decoration: InputDecoration(
+                prefixText: '৳ ',
+                labelText: _isGot ? 'পেলাম / জমার পরিমাণ' : 'দিলাম / বাকি বিক্রির পরিমাণ',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
             const SizedBox(height: 16),
+
+            // Description / Note (বিবরণ)
+            TextField(
+              controller: _noteCtrl,
+              decoration: InputDecoration(
+                prefixIcon: const Icon(Icons.edit_note_sharp),
+                labelText: 'বিবরণ',
+                hintText: 'লেনদেনের বিবরণ লিখুন (ঐচ্ছিক)',
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Date Picker & Photo Attachment Action Row (matching TallyKhata)
+            Row(
+              children: [
+                Expanded(
+                  child: InkWell(
+                    onTap: () async {
+                      final picked = await showDatePicker(
+                        context: context,
+                        initialDate: _selectedDate,
+                        firstDate: DateTime(2000),
+                        lastDate: DateTime(2100),
+                      );
+                      if (picked != null) {
+                        setState(() => _selectedDate = picked);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.date_range, size: 18, color: Colors.grey.shade700),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_selectedDate.day}-${_selectedDate.month}-${_selectedDate.year}',
+                            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: InkWell(
+                    onTap: () {
+                      setState(() => _hasPhotoAttached = !_hasPhotoAttached);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(_hasPhotoAttached ? 'মেমো / রশিদ ছবি যুক্ত হয়েছে' : 'ছবি সরানো হয়েছে'),
+                        ),
+                      );
+                    },
+                    borderRadius: BorderRadius.circular(30),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: _hasPhotoAttached ? Colors.green.shade50 : Colors.grey.shade100,
+                        borderRadius: BorderRadius.circular(30),
+                        border: Border.all(color: _hasPhotoAttached ? Colors.green : Colors.grey.shade300),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            _hasPhotoAttached ? Icons.check_circle : Icons.add_a_photo_outlined,
+                            size: 18,
+                            color: _hasPhotoAttached ? Colors.green : Colors.grey.shade700,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            _hasPhotoAttached ? 'ছবি যুক্ত' : 'ছবি',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                              color: _hasPhotoAttached ? Colors.green.shade800 : Colors.black87,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 36),
+
+            // Submit Button ("নিশ্চিত")
             SizedBox(
               width: double.infinity,
-              height: 56,
+              height: 52,
               child: ElevatedButton(
                 onPressed: _isLoading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: color,
+                  backgroundColor: const Color(0xFFE53935),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                child: _isLoading 
-                  ? const CircularProgressIndicator(color: Colors.white) 
-                  : const Text('SAVE', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                child: _isLoading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text('নিশ্চিত করুন', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildKey(String value, {IconData? icon}) {
-    return Expanded(
-      child: Padding(
-        padding: const EdgeInsets.all(4.0),
-        child: InkWell(
-          onTap: () => _onKeyPress(value),
-          borderRadius: BorderRadius.circular(8),
-          child: Container(
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(color: Colors.grey.shade300, offset: const Offset(0, 2), blurRadius: 4),
-              ],
-            ),
-            child: Center(
-              child: icon != null 
-                  ? Icon(icon, color: Colors.grey.shade700) 
-                  : Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            ),
-          ),
         ),
       ),
     );

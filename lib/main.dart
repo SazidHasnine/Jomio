@@ -8,8 +8,6 @@ import 'firebase_options.dart';
 import 'providers/app_provider.dart';
 import 'services/auth_service.dart';
 import 'services/database_service.dart';
-import 'screens/dashboard_screen.dart';
-import 'screens/auth_screen.dart';
 import 'screens/splash_screen.dart';
 
 void main() async {

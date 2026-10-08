@@ -17,7 +17,7 @@ class PdfService {
             children: [
               pw.Text('Business Logbook Ledger', style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
               pw.SizedBox(height: 20),
-              pw.Table.fromTextArray(
+              pw.TableHelper.fromTextArray(
                 context: context,
                 headers: ['Name', 'Type', 'Balance'],
                 data: customers.map((c) => [
@@ -37,7 +37,7 @@ class PdfService {
     // Trigger download in browser
     final blob = html.Blob([bytes], 'application/pdf');
     final url = html.Url.createObjectUrlFromBlob(blob);
-    final anchor = html.AnchorElement(href: url)
+    html.AnchorElement(href: url)
       ..setAttribute('download', 'ledger_report.pdf')
       ..click();
     html.Url.revokeObjectUrl(url);
